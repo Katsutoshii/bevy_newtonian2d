@@ -1,0 +1,29 @@
+[package]
+edition = "2024"
+name = "bevy_newtonian2d"
+version = "0.1.0"
+authors = ["Josiah Putman <joshikatsu@gmail.com>"]
+description = "Simple 2D Newtonian physics engine for Bevy."
+documentation = "https://docs.rs/bevy_newtonian2d/latest/bevy_newtonian2d"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/Katsutoshii/bevy_newtonian2d"
+repository = "https://github.com/Katsutoshii/bevy_newtonian2d"
+keywords = ["bevy"]
+readme = "README.md"
+exclude = ["assets/*"]
+
+[dependencies]
+bevy = { version = "0.16", default-features = false, features = [
+    "std",
+    "bevy_asset",
+    "bevy_state",
+] }
+
+derive_more = { version = "1.0", features = ["add", "add_assign"] }
+serde = "1.0"
+
+[dev-dependencies]
+bevy = { version = "0.16", default-features = true }
+
+[[example]]
+name = "bouncing_balls"
