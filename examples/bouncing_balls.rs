@@ -3,11 +3,11 @@ use bevy::{
     DefaultPlugins,
     app::{App, FixedUpdate, Startup},
     asset::Assets,
+    camera::{Camera2d, ClearColor},
     color::{
         Color,
         palettes::css::{BLUE, GREEN, RED},
     },
-    core_pipeline::core_2d::Camera2d,
     ecs::{
         component::Component,
         entity::Entity,
@@ -16,11 +16,8 @@ use bevy::{
         system::{Commands, Query, ResMut},
     },
     math::{Vec2, primitives::Circle},
-    render::{
-        camera::ClearColor,
-        mesh::{Mesh, Mesh2d},
-    },
-    sprite::{ColorMaterial, MeshMaterial2d},
+    mesh::{Mesh, Mesh2d},
+    sprite_render::{ColorMaterial, MeshMaterial2d},
     state::state::NextState,
     utils::default,
 };

@@ -15,13 +15,10 @@ use bevy::{
     reflect::Reflect,
     state::{app::AppExtStates, condition::in_state, state::States},
     time::{Fixed, Time},
-    transform::{TransformSystem, components::Transform},
+    transform::{TransformSystems, components::Transform},
 };
 
-use derive_more::{
-    Add, AddAssign, Sub, SubAssign,
-    derive::{Deref, DerefMut},
-};
+use derive_more::{Add, AddAssign, Deref, DerefMut, Sub, SubAssign};
 
 /// Plugin for basic 2d physics.
 #[derive(Default)]
@@ -42,7 +39,7 @@ impl Plugin for PhysicsPlugin {
                 Update,
                 update
                     .in_set(PhysicsSystem::UpdateTransform)
-                    .before(TransformSystem::TransformPropagate),
+                    .before(TransformSystems::Propagate),
             )
             .add_systems(
                 FixedUpdate,
@@ -228,11 +225,11 @@ impl Into<Quat> for Rotation2 {
     /// sin(θ / 2) = sin(θ) / (2 * cos(θ / 2))
     fn into(self) -> Quat {
         // Special case: self.x ≈ -1 (θ ≈ π), avoid divide by zero.
-        if (self.x + 1.0).abs() < f32::EPSILON {
+        if (self.0.x + 1.0).abs() < f32::EPSILON {
             Quat::from_xyzw(0.0, 0.0, 1.0, 0.0)
         } else {
-            let w = ((self.x + 1.0) * 0.5).sqrt();
-            let z = self.y / (2.0 * w);
+            let w = ((self.0.x + 1.0) * 0.5).sqrt();
+            let z = self.0.y / (2.0 * w);
             Quat::from_xyzw(0.0, 0.0, z, w)
         }
     }
@@ -329,7 +326,7 @@ pub fn update(
         transform.translation.x = smoothed_position.x;
         transform.translation.y = smoothed_position.y;
 
-        let angle = rotation.to_angle();
+        let angle = rotation.0.to_angle();
         let prev_angle = angle - angular_velocity.0 * dt;
         let smooth_rotation = prev_angle.lerp(angle, overstep_fraction);
         transform.rotation = Quat::from_rotation_z(smooth_rotation);
@@ -356,7 +353,7 @@ pub fn fixed_update(
         force.0 -= velocity.0 * material.friction;
 
         velocity.0 += force.0 * dt / (mass.0);
-        velocity.0 = velocity.clamp_length_max(material.max_velocity);
+        velocity.0 = velocity.0.clamp_length_max(material.max_velocity);
 
         position.0 += velocity.0 * dt;
 
@@ -387,8 +384,8 @@ pub fn fixed_update_angular(
 
         rotation.rotate_dt(*angular_velocity, dt);
         rotation.0 = Mat2::from_angle(angular_velocity.0 * dt) * rotation.0;
-        if !rotation.is_normalized() {
-            rotation.0 = rotation.normalize();
+        if !rotation.0.is_normalized() {
+            rotation.0 = rotation.0.normalize();
         }
         *torque = Torque2(0.0);
     }
@@ -497,7 +494,7 @@ mod tests {
         let dt = 0.5;
         omega.0 += tau.0 * dt;
         theta.rotate_dt(omega, dt);
-        assert!(theta.to_angle() > PI / 8.0 - f32::EPSILON);
-        assert!(theta.to_angle() < PI / 8.0 + f32::EPSILON);
+        assert!(theta.0.to_angle() > PI / 8.0 - f32::EPSILON);
+        assert!(theta.0.to_angle() < PI / 8.0 + f32::EPSILON);
     }
 }
