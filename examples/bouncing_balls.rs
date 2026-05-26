@@ -1,4 +1,5 @@
 //! Example to demonstrate using the system to simulate bouncing balls.
+//! `cargo run --example bouncing_balls`
 use bevy::{
     DefaultPlugins,
     app::{App, FixedUpdate, Startup},
