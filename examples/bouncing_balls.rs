@@ -9,6 +9,7 @@ use bevy::{
         Color,
         palettes::css::{BLUE, GREEN, RED},
     },
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig},
     ecs::{
         component::Component,
         entity::Entity,
@@ -29,7 +30,19 @@ use bevy_newtonian2d::{
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, PhysicsPlugin))
+        .add_plugins((
+            DefaultPlugins,
+            PhysicsPlugin,
+            FpsOverlayPlugin {
+                config: FpsOverlayConfig {
+                    frame_time_graph_config: FrameTimeGraphConfig {
+                        enabled: false,
+                        ..default()
+                    },
+                    ..default()
+                },
+            },
+        ))
         .insert_resource(ClearColor(Color::BLACK))
         .add_systems(Startup, setup)
         .add_systems(

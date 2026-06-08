@@ -139,6 +139,9 @@ impl Position2 {
 pub struct Velocity2(pub Vec2);
 impl Velocity2 {
     pub const ZERO: Self = Self(Vec2::ZERO);
+    pub fn new(x: f32, y: f32) -> Self {
+        Self(Vec2::new(x, y))
+    }
 }
 impl Mul<f32> for Velocity2 {
     type Output = Self;
@@ -167,6 +170,9 @@ impl Mul<f32> for Velocity2 {
 pub struct Force2(pub Vec2);
 impl Force2 {
     pub const ZERO: Self = Self(Vec2::ZERO);
+    pub fn new(x: f32, y: f32) -> Self {
+        Self(Vec2::new(x, y))
+    }
 }
 impl Mul<f32> for Force2 {
     type Output = Self;
