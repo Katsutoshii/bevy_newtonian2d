@@ -29,7 +29,11 @@ serde = { version = "1.0", features = ["serde_derive"] }
 [dev-dependencies]
 bevy = { version = "0.19", default-features = true, features = [
     "bevy_dev_tools",
+    "dynamic_linking",
 ] }
 
 [[example]]
 name = "bouncing_balls"
+
+[[example]]
+name = "stress_test"

@@ -12,7 +12,6 @@ use bevy::{
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig},
     ecs::{
         component::Component,
-        entity::Entity,
         lifecycle::HookContext,
         query::With,
         resource::Resource,
@@ -20,10 +19,11 @@ use bevy::{
         system::{Commands, Query, ResMut},
         world::{DeferredWorld, FromWorld, World},
     },
-    math::{Vec2, primitives::Circle},
+    math::{Vec2, Vec3, primitives::Circle},
     mesh::{Mesh, Mesh2d},
     sprite_render::{ColorMaterial, MeshMaterial2d},
     state::state::NextState,
+    transform::components::Transform,
     utils::default,
 };
 use bevy_newtonian2d::{
@@ -71,7 +71,7 @@ impl FromWorld for BallAssets {
             red_material: world.add_asset(ColorMaterial::from_color(RED)),
             green_material: world.add_asset(ColorMaterial::from_color(GREEN)),
             blue_material: world.add_asset(ColorMaterial::from_color(BLUE)),
-            circle_mesh: world.add_asset(Circle { radius: 10.0 }),
+            circle_mesh: world.add_asset(Circle { radius: 1.0 }),
         }
     }
 }
@@ -94,7 +94,7 @@ impl Ball {
             blue_material,
             circle_mesh,
         } = world.resource::<BallAssets>().clone();
-        let ball = world.get::<Self>(context.entity).unwrap();
+        let ball = world.get::<Self>(context.entity).unwrap().clone();
         let material = match ball.color {
             RED => red_material,
             GREEN => green_material,
@@ -104,7 +104,13 @@ impl Ball {
         world.commands().entity(context.entity).insert((
             Mesh2d(circle_mesh),
             MeshMaterial2d(material),
-            CircleCollider { radius: 10.0 },
+            CircleCollider {
+                radius: ball.radius,
+            },
+            Transform {
+                scale: Vec3::splat(ball.radius),
+                ..default()
+            },
         ));
     }
 }
@@ -112,49 +118,28 @@ impl Ball {
 /// Spawn balls
 fn setup(mut commands: Commands, mut physics_state: ResMut<NextState<PhysicsSimulationState>>) {
     commands.spawn(Camera2d);
-    commands.spawn((
-        Ball {
-            radius: 10.0,
-            color: GREEN,
-        },
-        Position2::new(0.0, 200.0),
-    ));
-    commands.spawn((
-        Ball {
-            radius: 10.0,
-            color: RED,
-        },
-        Position2::new(5.0, 220.0),
-    ));
-    commands.spawn((
-        Ball {
-            radius: 10.0,
-            color: BLUE,
-        },
-        Position2::new(-15.0, 100.0),
-    ));
+    let x_step = 2.0;
+    let y_step = 2.0;
+    let n = 96;
+    for y in -n..n {
+        for x in -n..n {
+            commands.spawn((
+                Ball {
+                    radius: 1.0,
+                    color: GREEN,
+                },
+                Position2::new(x_step * x as f32, 200.0 + y_step * y as f32),
+            ));
+        }
+    }
     physics_state.set(PhysicsSimulationState::Running);
 }
 
 /// Apply gravity and collision forces.
-fn fixed_update(
-    mut balls: Query<(Entity, &Position2, &CircleCollider, &mut Force2), With<Ball>>,
-    other_balls: Query<(Entity, &Position2, &CircleCollider), With<Ball>>,
-) {
+fn fixed_update(mut balls: Query<&mut Force2, With<Ball>>) {
     let gravity = 0.1;
-    for (entity, position, collider, mut force) in balls.iter_mut() {
+    for mut force in balls.iter_mut() {
         *force += Force2(-Vec2::Y) * gravity;
-
-        for (other_entity, other_position, other_collider) in other_balls.iter() {
-            if entity == other_entity {
-                continue;
-            }
-            let delta = position.0 - other_position.0;
-            let distance_squared = delta.length_squared();
-            if collider.is_colliding(*other_collider, distance_squared) {
-                *force += Force2(delta.normalize_or_zero());
-            }
-        }
     }
 }
 
@@ -162,7 +147,7 @@ fn fixed_update(
 fn fixed_update_bounce_off_floor(
     mut balls: Query<(&mut Position2, &Velocity2, &CircleCollider, &mut Force2), With<Ball>>,
 ) {
-    let floor = 0.0;
+    let floor = -200.0;
     for (mut position, velocity, collider, mut force) in balls.iter_mut() {
         if position.0.y < floor + collider.radius {
             position.y = floor + collider.radius;
